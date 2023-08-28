@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import Searchbar from '../Searchbar';
 import Loader from 'components/Loader/Loader';
 import Button from '../Button';
@@ -12,72 +12,71 @@ import './App.styled.js';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-class App extends Component {
-  state = {
-    query: '',
-    images: [],
-    page: 1,
-    loading: false,
-    selectedImage: null,
-    showBtn: false,
-  };
+export default function App() {
+  const [query, setQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [showBtn, setShowBtn] = useState(false);
 
-  handleSearchSubmit = query => {
-    this.setState({ query, images: [], page: 1 });
-  };
+  useEffect(() => {
+    const fetchImagesData = (query, page) => {
+      fetchImages(query, page)
+        .then(response => {
+          if (response.data.hits.length === 0) {
+            toast.error(`Sorry, no image for "${query}" request!`, {
+              position: toast.POSITION.TOP_RIGHT,
+            });
+            return;
+          }
+          setImages(prevImages => [...prevImages, ...response.data.hits]);
+          setShowBtn(page < Math.ceil(response.data.totalHits / 12));
+        })
+        .catch(error => {
+          console.error('Error fetching images:', error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    };
 
-  componentDidUpdate = (prevProps, prevState) => {
-    const { query, page } = this.state;
-
-    if (prevState.query !== query || prevState.page !== page) {
-      fetchImages(query, page).then(response => {
-        if (response.data.hits.length === 0) {
-          toast.error(`Sorry, no image for "${query}" request!`, {
-            position: toast.POSITION.TOP_RIGHT,
-          });
-          return;
-        }
-        this.setState(prevState => ({
-          images: [...prevState.images, ...response.data.hits],
-          showBtn: page < Math.ceil(response.data.totalHits / 12),
-        }));
-      });
+    if (query !== '' && (page !== 1 || query !== '')) {
+      fetchImagesData(query, page);
     }
+  }, [query, page]);
+
+  const handleSearchSubmit = submittedQuery => {
+    setQuery(submittedQuery);
+    setImages([]);
+    setPage(1);
   };
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const handleLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  handleImageClick = imageUrl => {
-    this.setState({ selectedImage: imageUrl });
+  const handleImageClick = imageUrl => {
+    setSelectedImage(imageUrl);
   };
 
-  handleCloseModal = () => {
-    this.setState({ selectedImage: null });
+  const handleCloseModal = () => {
+    setSelectedImage(null);
   };
 
-  render() {
-    const { images, loading, selectedImage, showBtn } = this.state;
-
-    return (
-      <Layout>
-        <Searchbar onSubmit={this.handleSearchSubmit} />
-        <ImageGallery images={images} onItemClick={this.handleImageClick} />
-        {loading && <Loader />}
-        {showBtn && !loading && (
-          <Button onClick={this.handleLoadMore} label="Load more" />
-        )}
-        {selectedImage && (
-          <Modal image={selectedImage} onClose={this.handleCloseModal} />
-        )}
-        <ToastContainer />
-        <GlobalStyle />
-      </Layout>
-    );
-  }
+  return (
+    <Layout>
+      <Searchbar onSubmit={handleSearchSubmit} />
+      <ImageGallery images={images} onItemClick={handleImageClick} />
+      {loading && <Loader />}
+      {showBtn && !loading && (
+        <Button onClick={handleLoadMore} label="Load more" />
+      )}
+      {selectedImage && (
+        <Modal image={selectedImage} onClose={handleCloseModal} />
+      )}
+      <ToastContainer />
+      <GlobalStyle />
+    </Layout>
+  );
 }
-
-export default App;
