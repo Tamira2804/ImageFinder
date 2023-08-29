@@ -21,6 +21,9 @@ export default function App() {
   const [showBtn, setShowBtn] = useState(false);
 
   useEffect(() => {
+    if (!query) {
+      return;
+    }
     const fetchImagesData = (query, page) => {
       fetchImages(query, page)
         .then(response => {
@@ -41,9 +44,7 @@ export default function App() {
         });
     };
 
-    if (query !== '' && (page !== 1 || query !== '')) {
-      fetchImagesData(query, page);
-    }
+    fetchImagesData(query, page);
   }, [query, page]);
 
   const handleSearchSubmit = submittedQuery => {
