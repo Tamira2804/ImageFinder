@@ -2,7 +2,7 @@
   "name": "imagefinder",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://Tamira2804.github.io/imagefinder/",
+  "homepage": "https://Tamira2804.github.io/ImageFinder/",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.3",
     "@testing-library/react": "^12.1.4",
